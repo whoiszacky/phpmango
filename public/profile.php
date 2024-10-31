@@ -42,13 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['media_id']) && isset(
 }
 
 // Retrieve uploaded media
-$uploadedMedia = $mediaHandler->getMediaByUser($username);
-
 $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
 
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -59,10 +55,10 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-        /* Your existing styles */
+        /* Additional custom styles if necessary */
     </style>
 </head>
-<body class="bg-gray-200 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-3xl">
         <h1 class="text-3xl font-semibold text-center mb-6 text-gray-800">Welcome, <?php echo htmlspecialchars($user->username); ?></h1>
 
@@ -70,13 +66,13 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
         <form method="post" enctype="multipart/form-data" class="mb-6">
             <div class="mb-4">
                 <label class="block text-gray-600 mb-2">Select Media File:</label>
-                <input type="file" name="media_file" class="border rounded-md w-full p-2 text-gray-600" required accept="image/*,video/*" id="mediaFileInput">
+                <input type="file" name="media_file" class="border rounded-md w-full p-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" required accept="image/*,video/*" id="mediaFileInput">
             </div>
             <div id="mediaPreview" class="mt-4 hidden">
                 <h3 class="font-semibold text-gray-700">Preview:</h3>
                 <div id="previewContainer"></div>
             </div>
-            <button type="submit" class="bg-blue-600 text-white rounded-md py-2 px-4 w-full hover:bg-blue-500 transition duration-200" aria-label="Upload media file">Upload</button>
+            <button type="submit" class="bg-blue-600 text-white rounded-md py-2 px-4 w-full hover:bg-blue-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Upload media file">Upload</button>
         </form>
 
         <?php if (isset($uploadMessage)): ?>
@@ -88,16 +84,16 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
         <h2 class="text-xl font-semibold mt-6 mb-2 text-gray-700">All Uploaded Media</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <?php foreach ($allMedia as $media): ?>
-                <div class="bg-gray-50 border rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <div class="flex justify-between items-center">
+                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <div class="flex justify-between items-center mb-2">
                         <a href="<?php echo htmlspecialchars($media->filepath); ?>" target="_blank" class="text-blue-600 hover:underline">
                             <?php echo htmlspecialchars($media->filename); ?>
                         </a>
                         <span class="text-gray-500">(Size: <?php echo htmlspecialchars($media->file_size); ?> bytes)</span>
                     </div>
-                    <span class="text-gray-500">(Uploaded by: <?php echo htmlspecialchars($media->uploader); ?>)</span>
-                    <span class="text-gray-500">(Status: <?php echo htmlspecialchars($media->status); ?>)</span>
-
+                    <span class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">Uploaded by: <?php echo htmlspecialchars($media->uploader); ?></span>
+                    <span class="inline-block bg-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-200 text-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-700 text-xs px-2 py-1 rounded-full">Status: <?php echo htmlspecialchars($media->status); ?></span>
+                    
                     <!-- Comment Section -->
                     <div class="mt-4">
                         <h3 class="font-semibold text-gray-700">Comments:</h3>
@@ -120,19 +116,19 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                         <form method="post" class="mt-2">
                             <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
                             <textarea name="comment" required placeholder="Add your comment..." class="border rounded-lg w-full p-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"></textarea>
-                            <button type="submit" class="bg-blue-600 text-white rounded-md py-1 px-3 w-full mt-2 hover:bg-blue-500 transition duration-200">Submit Comment</button>
+                            <button type="submit" class="bg-blue-600 text-white rounded-md py-1 px-3 w-full mt-2 hover:bg-blue-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">Submit Comment</button>
                         </form>
                     </div>
 
                     <!-- Status Update Form -->
                     <form method="post" action="update_status.php" class="mt-4">
                         <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
-                        <select name="status" class="border rounded-md w-full p-2 text-gray-600">
+                        <select name="status" class="border rounded-md w-full p-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                             <option value="approved" <?php if ($media->status == 'approved') echo 'selected'; ?>>Approved</option>
                             <option value="needs work" <?php if ($media->status == 'needs work') echo 'selected'; ?>>Needs Work</option>
                             <option value="rejected" <?php if ($media->status == 'rejected') echo 'selected'; ?>>Rejected</option>
                         </select>
-                        <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2 hover:bg-green-500 transition duration-200">Update Status</button>
+                        <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2 hover:bg-green-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500">Update Status</button>
                     </form>
                 </div>
             <?php endforeach; ?>
@@ -177,4 +173,3 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
     </script>
 </body>
 </html>
-
