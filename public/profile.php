@@ -1,13 +1,19 @@
 <?php
-session_start();
-require '../src/db.php'; // Ensure this path is correct
-require '../src/auth.php';
-require '../src/media.php';
-require '../src/feedback.php'; // Make sure to include the feedback handler
+// Start the session only if it's not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Include required files using require_once to avoid redeclaration errors
+require_once '../src/db.php'; // Ensure this path is correct
+require_once '../src/auth.php';
+require_once '../src/media.php';
+require_once '../src/feedback.php'; // Include the feedback handler
 
 // Get the database connection
 $db = getDbConnection();
 
+// Redirect to the index page if user is not logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit();
@@ -18,6 +24,7 @@ $user = $db->users->findOne(['username' => $username]);
 $mediaHandler = new Media($db);
 $feedbackHandler = new Feedback($db); // Initialize feedback handler
 
+// Handle media upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['media_file'])) {
     $file = $_FILES['media_file'];
     if ($mediaHandler->uploadMedia($file, $username)) {
@@ -36,7 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['media_id']) && isset(
 
 // Retrieve uploaded media
 $uploadedMedia = $mediaHandler->getMediaByUser($username);
+
+$allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
+
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -45,11 +57,9 @@ $uploadedMedia = $mediaHandler->getMediaByUser($username);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - Media Management</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-        img, video {
-            max-width: 100%;
-            height: auto;
-        }
+        /* Your existing styles */
     </style>
 </head>
 <body class="bg-gray-200 flex items-center justify-center min-h-screen">
@@ -66,17 +76,19 @@ $uploadedMedia = $mediaHandler->getMediaByUser($username);
                 <h3 class="font-semibold text-gray-700">Preview:</h3>
                 <div id="previewContainer"></div>
             </div>
-            <button type="submit" class="bg-blue-600 text-white rounded-md py-2 px-4 w-full hover:bg-blue-500 transition duration-200">Upload</button>
+            <button type="submit" class="bg-blue-600 text-white rounded-md py-2 px-4 w-full hover:bg-blue-500 transition duration-200" aria-label="Upload media file">Upload</button>
         </form>
 
         <?php if (isset($uploadMessage)): ?>
-            <p class="mt-4 text-center text-gray-700"><?php echo $uploadMessage; ?></p>
+            <div class="mt-4 text-center text-<?php echo strpos($uploadMessage, 'success') !== false ? 'green' : 'red'; ?>-600">
+                <?php echo $uploadMessage; ?>
+            </div>
         <?php endif; ?>
 
-        <h2 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Your Uploaded Media</h2>
-        <ul class="list-disc pl-5 space-y-4">
-            <?php foreach ($uploadedMedia as $media): ?>
-                <li class="bg-gray-50 border rounded-lg p-4">
+        <h2 class="text-xl font-semibold mt-6 mb-2 text-gray-700">All Uploaded Media</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <?php foreach ($allMedia as $media): ?>
+                <div class="bg-gray-50 border rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200">
                     <div class="flex justify-between items-center">
                         <a href="<?php echo htmlspecialchars($media->filepath); ?>" target="_blank" class="text-blue-600 hover:underline">
                             <?php echo htmlspecialchars($media->filename); ?>
@@ -89,17 +101,25 @@ $uploadedMedia = $mediaHandler->getMediaByUser($username);
                     <!-- Comment Section -->
                     <div class="mt-4">
                         <h3 class="font-semibold text-gray-700">Comments:</h3>
-                        <ul class="list-disc pl-5">
+                        <ul class="list-none space-y-3 mt-2">
                             <?php
-                            $comments = $feedbackHandler->getComments($media->_id);
-                            foreach ($comments as $comment): ?>
-                                <li><?php echo htmlspecialchars($comment->username) . ": " . htmlspecialchars($comment->comment); ?></li>
-                            <?php endforeach; ?>
+                            $comments = $media->comments ?? [];
+                            if (!empty($comments)) {
+                                foreach ($comments as $comment): ?>
+                                    <li class="bg-gray-100 p-3 rounded-lg">
+                                        <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($comment['username']); ?></span>
+                                        <span class="text-xs text-gray-500 ml-2"><?php echo htmlspecialchars($comment['timestamp'] ?? 'Just now'); ?></span>
+                                        <p class="text-gray-600 mt-1"><?php echo htmlspecialchars($comment['comment']); ?></p>
+                                    </li>
+                                <?php endforeach;
+                            } else {
+                                echo "<li class='text-gray-500'>No comments yet.</li>";
+                            }
+                            ?>
                         </ul>
-
                         <form method="post" class="mt-2">
                             <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
-                            <textarea name="comment" required placeholder="Add your comment..." class="border rounded-md w-full p-2 mt-2 text-gray-600"></textarea>
+                            <textarea name="comment" required placeholder="Add your comment..." class="border rounded-lg w-full p-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"></textarea>
                             <button type="submit" class="bg-blue-600 text-white rounded-md py-1 px-3 w-full mt-2 hover:bg-blue-500 transition duration-200">Submit Comment</button>
                         </form>
                     </div>
@@ -114,11 +134,13 @@ $uploadedMedia = $mediaHandler->getMediaByUser($username);
                         </select>
                         <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2 hover:bg-green-500 transition duration-200">Update Status</button>
                     </form>
-                </li>
+                </div>
             <?php endforeach; ?>
-        </ul>
+        </div>
 
-        <a href="logout.php" class="text-red-500 mt-4 inline-block hover:underline">Logout</a>
+        <a href="logout.php" class="flex items-center text-red-500 mt-4 hover:underline">
+            <span class="mr-1"><i class="fas fa-sign-out-alt"></i></span> Logout
+        </a>
     </div>
 
     <script>
@@ -145,13 +167,14 @@ $uploadedMedia = $mediaHandler->getMediaByUser($username);
                         video.className = 'mt-2 rounded-md shadow-lg'; // Improved styling
                         previewContainer.appendChild(video);
                     }
-                    mediaPreview.style.display = 'block'; // Show the preview
+                    mediaPreview.classList.remove('hidden'); // Show the preview
                 };
                 reader.readAsDataURL(file);
             } else {
-                mediaPreview.style.display = 'none'; // Hide preview if no file selected
+                mediaPreview.classList.add('hidden'); // Hide preview if no file selected
             }
         });
     </script>
 </body>
 </html>
+

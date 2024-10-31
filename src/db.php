@@ -8,4 +8,5 @@ function getDbConnection() {
     // Select the database
     return $client->media_management; // Return the database object
 }
+
 ?>

@@ -36,11 +36,34 @@ class Media {
         }
         return false;
     }
-    
-    
+
+    public function getAllMedia() {
+        return $this->db->media->find();
+    }
 
     public function getMediaByUser($username) {
         return $this->db->media->find(['uploader' => $username]);
+    }
+}
+
+class Feedback {
+    private $db;
+
+    public function __construct($db) {
+        $this->db = $db;
+    }
+
+    public function addComment($mediaId, $username, $commentText) {
+        $comment = [
+            'username' => $username,
+            'comment' => $commentText,
+            'comment_date' => new MongoDB\BSON\UTCDateTime() // Add timestamp here
+        ];
+
+        $this->db->media->updateOne(
+            ['_id' => new MongoDB\BSON\ObjectId($mediaId)],
+            ['$push' => ['comments' => $comment]]
+        );
     }
 }
 ?>
