@@ -85,14 +85,24 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <?php foreach ($allMedia as $media): ?>
                 <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <a href="<?php echo htmlspecialchars($media->filepath); ?>" target="_blank" class="text-blue-600 hover:underline">
-                            <?php echo htmlspecialchars($media->filename); ?>
-                        </a>
-                        <span class="text-gray-500">(Size: <?php echo htmlspecialchars($media->file_size); ?> bytes)</span>
-                    </div>
-                    <span class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">Uploaded by: <?php echo htmlspecialchars($media->uploader); ?></span>
-                    <span class="inline-block bg-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-200 text-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-700 text-xs px-2 py-1 rounded-full">Status: <?php echo htmlspecialchars($media->status); ?></span>
+                <div class="flex justify-between items-center mb-2">
+    <a href="<?php echo htmlspecialchars(isset($media->filepath) ? $media->filepath : '#'); ?>" target="_blank" class="text-blue-600 hover:underline">
+        <?php echo htmlspecialchars(isset($media->filename) ? $media->filename : 'Unknown file'); ?>
+    </a>
+    <span class="text-gray-500">
+        (Size: <?php echo htmlspecialchars(isset($media->file_size) ? $media->file_size : 'N/A'); ?> bytes)
+    </span>
+</div>
+<span class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
+    Uploaded by: <?php echo htmlspecialchars(isset($media->uploader) ? $media->uploader : 'Unknown uploader'); ?>
+</span>
+
+                    <span class="inline-block bg-<?php echo isset($media->status) ? ($media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red')) : 'gray'; ?>-200 
+    text-<?php echo isset($media->status) ? ($media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red')) : 'gray'; ?>-700 
+    text-xs px-2 py-1 rounded-full">
+    Status: <?php echo htmlspecialchars(isset($media->status) ? $media->status : 'unknown'); ?>
+</span>
+
                     
                     <!-- Comment Section -->
                     <div class="mt-4">
@@ -104,7 +114,19 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                                 foreach ($comments as $comment): ?>
                                     <li class="bg-gray-100 p-3 rounded-lg">
                                         <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($comment['username']); ?></span>
-                                        <span class="text-xs text-gray-500 ml-2"><?php echo htmlspecialchars($comment['timestamp'] ?? 'Just now'); ?></span>
+                                        <span class="text-xs text-gray-500 ml-2">
+    <?php
+    if (isset($comment['comment_date']) && $comment['comment_date'] instanceof MongoDB\BSON\UTCDateTime) {
+        // Convert to PHP DateTime object
+        $dateTime = $comment['comment_date']->toDateTime();
+        // Format the DateTime object as desired
+        echo $dateTime->format('Y-m-d H:i:s'); // e.g., 'Y-m-d H:i:s' for full date-time
+    } else {
+        echo 'Just now';
+    }
+    ?>
+</span>
+
                                         <p class="text-gray-600 mt-1"><?php echo htmlspecialchars($comment['comment']); ?></p>
                                     </li>
                                 <?php endforeach;
@@ -121,15 +143,16 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                     </div>
 
                     <!-- Status Update Form -->
-                    <form method="post" action="update_status.php" class="mt-4">
-                        <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
-                        <select name="status" class="border rounded-md w-full p-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
-                            <option value="approved" <?php if ($media->status == 'approved') echo 'selected'; ?>>Approved</option>
-                            <option value="needs work" <?php if ($media->status == 'needs work') echo 'selected'; ?>>Needs Work</option>
-                            <option value="rejected" <?php if ($media->status == 'rejected') echo 'selected'; ?>>Rejected</option>
-                        </select>
-                        <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2 hover:bg-green-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500">Update Status</button>
-                    </form>
+                    <!-- Status Update Form -->
+<form method="post" action="update_status.php" class="mt-4">
+    <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
+    <select name="status" class="border rounded-md w-full p-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+        <option value="approved" <?php if (isset($media->status) && $media->status == 'approved') echo 'selected'; ?>>Approved</option>
+        <option value="needs work" <?php if (isset($media->status) && $media->status == 'needs work') echo 'selected'; ?>>Needs Work</option>
+        <option value="rejected" <?php if (isset($media->status) && $media->status == 'rejected') echo 'selected'; ?>>Rejected</option>
+    </select>
+    <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2 hover:bg-green-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500">Update Status</button>
+</form>
                 </div>
             <?php endforeach; ?>
         </div>
