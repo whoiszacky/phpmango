@@ -115,17 +115,17 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                                     <li class="bg-gray-100 p-3 rounded-lg">
                                         <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($comment['username']); ?></span>
                                         <span class="text-xs text-gray-500 ml-2">
-    <?php
-    if (isset($comment['comment_date']) && $comment['comment_date'] instanceof MongoDB\BSON\UTCDateTime) {
-        // Convert to PHP DateTime object
-        $dateTime = $comment['comment_date']->toDateTime();
-        // Format the DateTime object as desired
-        echo $dateTime->format('Y-m-d H:i:s'); // e.g., 'Y-m-d H:i:s' for full date-time
-    } else {
-        echo 'Just now';
-    }
-    ?>
-</span>
+                                        <?php
+                                            if (isset($comment['comment_date']) && $comment['comment_date'] instanceof MongoDB\BSON\UTCDateTime) {
+                                                // Convert to PHP DateTime object
+                                                $dateTime = $comment['comment_date']->toDateTime();
+                                                // Format the DateTime object as desired
+                                                echo $dateTime->format('Y-m-d H:i:s'); // e.g., 'Y-m-d H:i:s' for full date-time
+                                            } else {
+                                                echo 'Just now';
+                                            }
+                                        ?>
+                                        </span>
 
                                         <p class="text-gray-600 mt-1"><?php echo htmlspecialchars($comment['comment']); ?></p>
                                     </li>
