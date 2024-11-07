@@ -54,116 +54,121 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
     <title>User Profile - Media Management</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <style>
-        /* Additional custom styles if necessary */
-    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
     <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-3xl">
-        <h1 class="text-3xl font-semibold text-center mb-6 text-gray-800">Welcome, <?php echo htmlspecialchars($user->username); ?></h1>
+        <!-- User Greeting -->
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8">Welcome, <?php echo htmlspecialchars($user->username); ?></h1>
 
-        <h2 class="text-xl font-semibold mb-4 text-gray-700">Upload Media</h2>
-        <form method="post" enctype="multipart/form-data" class="mb-6">
-            <div class="mb-4">
-                <label class="block text-gray-600 mb-2">Select Media File:</label>
-                <input type="file" name="media_file" class="border rounded-md w-full p-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" required accept="image/*,video/*" id="mediaFileInput">
-            </div>
-            <div id="mediaPreview" class="mt-4 hidden">
-                <h3 class="font-semibold text-gray-700">Preview:</h3>
-                <div id="previewContainer"></div>
-            </div>
-            <button type="submit" class="bg-blue-600 text-white rounded-md py-2 px-4 w-full hover:bg-blue-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Upload media file">Upload</button>
-        </form>
-
-        <?php if (isset($uploadMessage)): ?>
-            <div class="mt-4 text-center text-<?php echo strpos($uploadMessage, 'success') !== false ? 'green' : 'red'; ?>-600">
-                <?php echo $uploadMessage; ?>
-            </div>
-        <?php endif; ?>
-
-        <h2 class="text-xl font-semibold mt-6 mb-2 text-gray-700">All Uploaded Media</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <?php foreach ($allMedia as $media): ?>
-                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200">
-                <div class="flex justify-between items-center mb-2">
-    <a href="<?php echo htmlspecialchars(isset($media->filepath) ? $media->filepath : '#'); ?>" target="_blank" class="text-blue-600 hover:underline">
-        <?php echo htmlspecialchars(isset($media->filename) ? $media->filename : 'Unknown file'); ?>
-    </a>
-    <span class="text-gray-500">
-        (Size: <?php echo htmlspecialchars(isset($media->file_size) ? $media->file_size : 'N/A'); ?> bytes)
-    </span>
-</div>
-<span class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
-    Uploaded by: <?php echo htmlspecialchars(isset($media->uploader) ? $media->uploader : 'Unknown uploader'); ?>
-</span>
-
-                    <span class="inline-block bg-<?php echo isset($media->status) ? ($media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red')) : 'gray'; ?>-200 
-    text-<?php echo isset($media->status) ? ($media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red')) : 'gray'; ?>-700 
-    text-xs px-2 py-1 rounded-full">
-    Status: <?php echo htmlspecialchars(isset($media->status) ? $media->status : 'unknown'); ?>
-</span>
-
-                    
-                    <!-- Comment Section -->
-                    <div class="mt-4">
-                        <h3 class="font-semibold text-gray-700">Comments:</h3>
-                        <ul class="list-none space-y-3 mt-2">
-                            <?php
-                            $comments = $media->comments ?? [];
-                            if (!empty($comments)) {
-                                foreach ($comments as $comment): ?>
-                                    <li class="bg-gray-100 p-3 rounded-lg">
-                                        <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($comment['username']); ?></span>
-                                        <span class="text-xs text-gray-500 ml-2">
-                                        <?php
-                                            if (isset($comment['comment_date']) && $comment['comment_date'] instanceof MongoDB\BSON\UTCDateTime) {
-                                                // Convert to PHP DateTime object
-                                                $dateTime = $comment['comment_date']->toDateTime();
-                                                // Format the DateTime object as desired
-                                                echo $dateTime->format('Y-m-d H:i:s'); // e.g., 'Y-m-d H:i:s' for full date-time
-                                            } else {
-                                                echo 'Just now';
-                                            }
-                                        ?>
-                                        </span>
-
-                                        <p class="text-gray-600 mt-1"><?php echo htmlspecialchars($comment['comment']); ?></p>
-                                    </li>
-                                <?php endforeach;
-                            } else {
-                                echo "<li class='text-gray-500'>No comments yet.</li>";
-                            }
-                            ?>
-                        </ul>
-                        <form method="post" class="mt-2">
-                            <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
-                            <textarea name="comment" required placeholder="Add your comment..." class="border rounded-lg w-full p-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"></textarea>
-                            <button type="submit" class="bg-blue-600 text-white rounded-md py-1 px-3 w-full mt-2 hover:bg-blue-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">Submit Comment</button>
-                        </form>
-                    </div>
-
-                    <!-- Status Update Form --><!-- Status Update Form (only for admins) -->
-                    <?php if (isset($user->role) && $user->role === 'admin'): ?>
-                        <form method="post" action="update_status.php" class="mt-4">
-                            <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
-                            <input type="hidden" name="admin" value="<?php echo htmlspecialchars($user->username); ?>">
-                            <select name="status" class="border rounded-md w-full p-2 text-gray-600">
-                                <option value="approved" <?php if ($media->status == 'approved') echo 'selected'; ?>>Approved</option>
-                                <option value="needs work" <?php if ($media->status == 'needs work') echo 'selected'; ?>>Needs Work</option>
-                                <option value="rejected" <?php if ($media->status == 'rejected') echo 'selected'; ?>>Rejected</option>
-                            </select>
-                            <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2">Update Status</button>
-                        </form>
-                    <?php endif; ?>
+        <!-- Upload Media Section -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Upload Media</h2>
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
+                <label class="block text-gray-600">
+                    <span>Select Media File:</span>
+                    <input type="file" name="media_file" class="mt-2 w-full border border-gray-300 rounded-lg p-3 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required accept="image/*,video/*" id="mediaFileInput">
+                </label>
+                <div id="mediaPreview" class="mt-4 hidden">
+                    <h3 class="text-gray-700 font-semibold">Preview:</h3>
+                    <div id="previewContainer" class="flex items-center justify-center mt-2 p-3 border border-gray-200 rounded-lg"></div>
                 </div>
-            <?php endforeach; ?>
-        </div>
+                <button type="submit" class="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold hover:bg-blue-500 transition duration-200">Upload</button>
+            </form>
+            <?php if (isset($uploadMessage)): ?>
+                <p class="text-center mt-4 text-<?php echo strpos($uploadMessage, 'success') !== false ? 'green' : 'red'; ?>-600"><?php echo $uploadMessage; ?></p>
+            <?php endif; ?>
+        </section>
 
-        <a href="logout.php" class="flex items-center text-red-500 mt-4 hover:underline">
-            <span class="mr-1"><i class="fas fa-sign-out-alt"></i></span> Logout
-        </a>
+        <!-- Uploaded Media Section -->
+        <section>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">All Uploaded Media</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <?php foreach ($allMedia as $media): ?>
+                    <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm transition-shadow hover:shadow-md">
+                        <div class="flex justify-between items-center mb-2">
+                            <a href="<?php echo htmlspecialchars($media->filepath ?? '#'); ?>" target="_blank" class="text-blue-600 hover:underline font-medium">
+                                <?php echo htmlspecialchars($media->filename ?? 'Unknown file'); ?>
+                            </a>
+                            <span class="text-gray-500 text-sm">(<?php echo htmlspecialchars($media->file_size ?? 'N/A'); ?> bytes)</span>
+                        </div>
+                        <p class="text-xs text-gray-600 mb-2">Uploaded by: <?php echo htmlspecialchars($media->uploader ?? 'Unknown uploader'); ?></p>
+                        <span class="inline-block bg-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-200 text-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-700 text-xs px-2 py-1 rounded-full">
+                            Status: <?php echo htmlspecialchars($media->status ?? 'unknown'); ?>
+                        </span>
+
+                        <!-- Comments Section -->
+                        <div class="mt-4">
+                            <h3 class="font-semibold text-gray-700 mb-2">Comments</h3>
+                            <ul class="space-y-2 border-t border-gray-200 pt-3">
+                                <?php if (!empty($media->comments)): ?>
+                                    <?php foreach ($media->comments as $comment): ?>
+                                        <li class="bg-gray-100 p-3 rounded-md shadow-sm">
+                                            <span class="text-gray-800 font-semibold"><?php echo htmlspecialchars($comment['username']); ?></span>
+                                            <span class="text-xs text-gray-500 ml-2">
+                                                <?php 
+                                                    if (isset($comment['comment_date'])) {
+                                                        $commentDate = $comment['comment_date']->toDateTime();
+                                                        $now = new DateTime();
+                                                        $diff = $now->diff($commentDate);
+                                                        
+                                                        if ($diff->y > 0) {
+                                                            echo $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+                                                        } elseif ($diff->m > 0) {
+                                                            echo $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+                                                        } elseif ($diff->d > 0) {
+                                                            echo $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+                                                        } elseif ($diff->h > 0) {
+                                                            echo $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+                                                        } elseif ($diff->i > 0) {
+                                                            echo $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+                                                        } else {
+                                                            echo 'Just now';
+                                                        }
+                                                    } else {
+                                                        echo 'Just now';
+                                                    }
+                                                ?>
+                                            </span>
+                                            <p class="text-gray-600 mt-1"><?php echo htmlspecialchars($comment['comment']); ?></p>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li class="text-gray-500">No comments yet.</li>
+                                <?php endif; ?>
+                            </ul>
+                            <form method="post" class="mt-3">
+                                <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
+                                <textarea name="comment" required placeholder="Add your comment..." class="w-full mt-2 p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
+                                <button type="submit" class="w-full mt-2 bg-blue-600 text-white rounded-lg py-2 font-semibold hover:bg-blue-500 transition">Submit Comment</button>
+                            </form>
+                        </div>
+
+                        <!-- Admin Status Update (Only for admins) -->
+                        <?php if (isset($user->role) && $user->role === 'admin'): ?>
+                            <form method="post" action="update_status.php" class="mt-4">
+                                <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
+                                <select name="status" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="approved" <?php echo $media->status === 'approved' ? 'selected' : ''; ?>>Approved</option>
+                                    <option value="needs work" <?php echo $media->status === 'needs work' ? 'selected' : ''; ?>>Needs Work</option>
+                                    <option value="rejected" <?php echo $media->status === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                                </select>
+                                <button type="submit" class="w-full mt-2 bg-green-600 text-white rounded-lg py-2 font-semibold hover:bg-green-500 transition">Update Status</button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+        <!-- Logout Button -->
+        <div class="flex justify-center mt-6">
+            <a href="logout.php" class="text-red-500 hover:underline flex items-center font-semibold">
+                <i class="fas fa-sign-out-alt mr-1"></i> Logout
+            </a>
+        </div>
     </div>
 
+    <!-- Media Preview Script -->
     <script>
         const mediaFileInput = document.getElementById('mediaFileInput');
         const mediaPreview = document.getElementById('mediaPreview');
@@ -171,30 +176,25 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
 
         mediaFileInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
-            previewContainer.innerHTML = ''; // Clear previous previews
+            previewContainer.innerHTML = '';
 
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    if (file.type.startsWith('image/')) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'mt-2 rounded-md shadow-lg'; // Improved styling
-                        previewContainer.appendChild(img);
-                    } else if (file.type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = e.target.result;
-                        video.controls = true;
-                        video.className = 'mt-2 rounded-md shadow-lg'; // Improved styling
-                        previewContainer.appendChild(video);
-                    }
-                    mediaPreview.classList.remove('hidden'); // Show the preview
+                    const previewElement = file.type.startsWith('image/') ? 'img' : 'video';
+                    const element = document.createElement(previewElement);
+                    element.src = e.target.result;
+                    element.className = 'rounded-md shadow-lg w-full h-auto';
+                    if (file.type.startsWith('video/')) element.controls = true;
+                    previewContainer.appendChild(element);
+                    mediaPreview.classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
             } else {
-                mediaPreview.classList.add('hidden'); // Hide preview if no file selected
+                mediaPreview.classList.add('hidden');
             }
         });
     </script>
 </body>
 </html>
+
