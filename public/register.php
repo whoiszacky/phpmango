@@ -1,6 +1,5 @@
 <?php
 require '../src/db.php'; // Ensure this path is correct
-// Include the database connection file
 
 // Connect to MongoDB
 $db = getDbConnection();
@@ -9,11 +8,13 @@ $collection = $db->users;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $role = $_POST['role']; // Get the role from the form
 
     // Insert user into MongoDB
     $result = $collection->insertOne([
         'username' => $username,
-        'password' => $password
+        'password' => $password,
+        'role' => $role // Store the role
     ]);
 
     if ($result->getInsertedCount() == 1) {
@@ -40,17 +41,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form method="post">
             <div class="mb-4">
                 <label class="block mb-1">Username:</label>
-                <input type="text" name="username" class="border rounded-md w-full p-2" required>
+                <input type="text" name="username" class="w-full border border-gray-300 p-2 rounded-lg" required>
             </div>
             <div class="mb-4">
                 <label class="block mb-1">Password:</label>
-                <input type="password" name="password" class="border rounded-md w-full p-2" required>
+                <input type="password" name="password" class="w-full border border-gray-300 p-2 rounded-lg" required>
             </div>
-            <button type="submit" class="bg-blue-500 text-white rounded-md py-2 px-4 w-full">Register</button>
+            <div class="mb-4">
+                <label class="block mb-1">Role:</label>
+                <select name="role" class="w-full border border-gray-300 p-2 rounded-lg" required>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg">Register</button>
         </form>
-        <p class="text-center mt-4">
-            <a href="index.php" class="text-blue-500">Already have an account? Login</a>
-        </p>
     </div>
 </body>
 </html>

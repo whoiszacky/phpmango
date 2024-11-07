@@ -142,17 +142,19 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                         </form>
                     </div>
 
-                    <!-- Status Update Form -->
-                    <!-- Status Update Form -->
-<form method="post" action="update_status.php" class="mt-4">
-    <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
-    <select name="status" class="border rounded-md w-full p-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
-        <option value="approved" <?php if (isset($media->status) && $media->status == 'approved') echo 'selected'; ?>>Approved</option>
-        <option value="needs work" <?php if (isset($media->status) && $media->status == 'needs work') echo 'selected'; ?>>Needs Work</option>
-        <option value="rejected" <?php if (isset($media->status) && $media->status == 'rejected') echo 'selected'; ?>>Rejected</option>
-    </select>
-    <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2 hover:bg-green-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500">Update Status</button>
-</form>
+                    <!-- Status Update Form --><!-- Status Update Form (only for admins) -->
+                    <?php if (isset($user->role) && $user->role === 'admin'): ?>
+                        <form method="post" action="update_status.php" class="mt-4">
+                            <input type="hidden" name="media_id" value="<?php echo htmlspecialchars($media->_id); ?>">
+                            <input type="hidden" name="admin" value="<?php echo htmlspecialchars($user->username); ?>">
+                            <select name="status" class="border rounded-md w-full p-2 text-gray-600">
+                                <option value="approved" <?php if ($media->status == 'approved') echo 'selected'; ?>>Approved</option>
+                                <option value="needs work" <?php if ($media->status == 'needs work') echo 'selected'; ?>>Needs Work</option>
+                                <option value="rejected" <?php if ($media->status == 'rejected') echo 'selected'; ?>>Rejected</option>
+                            </select>
+                            <button type="submit" class="bg-green-600 text-white rounded-md py-1 px-3 mt-2">Update Status</button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>

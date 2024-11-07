@@ -1,20 +1,36 @@
 <?php
 session_start();
-require '../src/db.php'; // Ensure you include your DB connection logic
+require_once '../src/db.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mediaId = $_POST['media_id'];
+$db = getDbConnection();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['media_id'], $_POST['status'])) {
+    $mediaId = new MongoDB\BSON\ObjectId($_POST['media_id']);
     $status = $_POST['status'];
+    $comment = $_POST['comment'] ?? '';
+    $updatedBy = $_SESSION['user_id']; // Assuming admin's username is stored in session
 
-    // Update the status of the media in the database
-    $db = getDbConnection(); // Ensure your DB connection is set up
-    $db->media->updateOne(
-        ['_id' => new MongoDB\BSON\ObjectId($mediaId)],
-        ['$set' => ['status' => $status]]
+    // Update the media status, admin who updated it, and add comment
+    $result = $db->media->updateOne(
+        ['_id' => $mediaId],
+        [
+            '$set' => [
+                'status' => $status,
+                'updated_by' => $updatedBy,
+                'comment' => $comment
+            ]
+        ]
     );
 
-    // Redirect back to the profile page after updating
-    header('Location: profile.php'); 
-    exit();
+    // Check if the update was successful
+    if ($result->getModifiedCount() == 1) {
+        $_SESSION['status_message'] = "Status updated successfully!";
+    } else {
+        $_SESSION['status_message'] = "Error: Status could not be updated.";
+    }
 }
+
+// Redirect back to the profile page
+header("Location: profile.php");
+exit();
 ?>
