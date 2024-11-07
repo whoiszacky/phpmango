@@ -56,6 +56,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg">Register</button>
         </form>
+        <p class="text-center mt-4">
+            <a href="index.php" class="text-blue-500">Login </a>
+        </p>
     </div>
 </body>
 </html>

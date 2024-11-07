@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['media_id']) && isset(
     $mediaId = $_POST['media_id'];
     $comment = $_POST['comment'];
     $feedbackHandler->addComment($mediaId, $username, $comment);
+
+    header('Location: ' . $_SERVER['PHP_SELF']);  // Redirect to the same page
+    exit();
 }
 
 // Retrieve uploaded media
@@ -92,9 +95,23 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                             <span class="text-gray-500 text-sm">(<?php echo htmlspecialchars($media->file_size ?? 'N/A'); ?> bytes)</span>
                         </div>
                         <p class="text-xs text-gray-600 mb-2">Uploaded by: <?php echo htmlspecialchars($media->uploader ?? 'Unknown uploader'); ?></p>
-                        <span class="inline-block bg-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-200 text-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-700 text-xs px-2 py-1 rounded-full">
-                            Status: <?php echo htmlspecialchars($media->status ?? 'unknown'); ?>
-                        </span>
+                        <div class="mt-4">
+    <span class="inline-block bg-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-200 text-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-700 text-xs px-2 py-1 rounded-full">
+        Status: <?php echo htmlspecialchars($media->status ?? 'unknown'); ?>
+    </span>
+    <?php if (isset($media->status_changed_at)): ?>
+        <p class="text-xs text-gray-500 mt-1">
+            Status changed on: <?php echo $media->status_changed_at->toDateTime()->format('Y-m-d H:i:s'); ?>
+        </p>
+    <?php endif; ?>
+    <?php if (isset($media->updated_by)): ?>
+        <p class="text-xs text-gray-500 mt-1">Updated by: <?php echo htmlspecialchars($media->updated_by ?? 'Unknown'); ?></p>
+    <?php endif; ?>
+    <?php if (isset($media->comment) && !empty($media->comment)): ?>
+        <p class="text-xs text-gray-500 mt-1">Comment: <?php echo htmlspecialchars($media->comment); ?></p>
+    <?php endif; ?>
+</div>
+
 
                         <!-- Comments Section -->
                         <div class="mt-4">

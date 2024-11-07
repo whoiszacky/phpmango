@@ -7,17 +7,19 @@ $db = getDbConnection();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['media_id'], $_POST['status'])) {
     $mediaId = new MongoDB\BSON\ObjectId($_POST['media_id']);
     $status = $_POST['status'];
-    $comment = $_POST['comment'] ?? '';
+    $comment = $_POST['comment'] ?? ''; // Optional comment field
     $updatedBy = $_SESSION['user_id']; // Assuming admin's username is stored in session
+    $timestamp = new MongoDB\BSON\UTCDateTime(new DateTime()); // Current timestamp
 
-    // Update the media status, admin who updated it, and add comment
+    // Update the media status, admin who updated it, add comment, and timestamp
     $result = $db->media->updateOne(
         ['_id' => $mediaId],
         [
             '$set' => [
                 'status' => $status,
                 'updated_by' => $updatedBy,
-                'comment' => $comment
+                'status_changed_at' => $timestamp, // Add timestamp of status update
+                'comment' => $comment // Store the comment if provided
             ]
         ]
     );
