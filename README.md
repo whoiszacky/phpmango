@@ -74,9 +74,12 @@ vendor/
 
    ```sh
 
+
    #this not needed as you u can use http://localhost:3000/public/index.php
    php -S localhost:8000 -t public
    ```
+
+   5. Remember to install php server extention and righ clcik and start the server project
 
 ## Usage
 
