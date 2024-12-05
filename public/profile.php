@@ -92,8 +92,10 @@ $allMedia = $mediaHandler->getAllMedia(); // Assuming this function exists
                             <a href="<?php echo htmlspecialchars($media->filepath ?? '#'); ?>" target="_blank" class="text-blue-600 hover:underline font-medium">
                                 <?php echo htmlspecialchars($media->filename ?? 'Unknown file'); ?>
                             </a>
+                            
                             <span class="text-gray-500 text-sm">(<?php echo htmlspecialchars($media->file_size ?? 'N/A'); ?> bytes)</span>
                         </div>
+                        <img src="<?php echo htmlspecialchars($media->filepath ?? ''); ?>" alt="<?php echo htmlspecialchars($media->filename ?? 'Unknown file'); ?>" class="w-full h-auto object-cover rounded-md">
                         <p class="text-xs text-gray-600 mb-2">Uploaded by: <?php echo htmlspecialchars($media->uploader ?? 'Unknown uploader'); ?></p>
                         <div class="mt-4">
     <span class="inline-block bg-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-200 text-<?php echo $media->status === 'approved' ? 'green' : ($media->status === 'needs work' ? 'yellow' : 'red'); ?>-700 text-xs px-2 py-1 rounded-full">

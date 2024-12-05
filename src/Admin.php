@@ -1,4 +1,4 @@
-// src/Admin.php
+<?php
 class Admin {
     private $db;
 
@@ -21,3 +21,5 @@ class Admin {
         return $this->db->tasks->find()->toArray();
     }
 }
+?>
+

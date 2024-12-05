@@ -6,9 +6,24 @@ class Media {
         $this->db = $db;
     }
 
+    private $allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'video/mp4',
+        'video/webm',
+        'video/ogg'
+    ];
+
     public function uploadMedia($file, $username) {
         $targetDirectory = 'uploads/';
         $targetFile = $targetDirectory . basename($file['name']);
+
+        // Check if the file type is allowed
+        if (!in_array($file['type'], $this->allowedMimeTypes)) {
+            return false;
+        }
     
         if (move_uploaded_file($file['tmp_name'], $targetFile)) {
             // Prepare metadata with error handling
@@ -35,6 +50,19 @@ class Media {
             return true;
         }
         return false;
+    }
+    public function isImage($mimeType) {
+
+        return preg_match('/^image\//', $mimeType);
+
+    }
+
+
+
+    public function isVideo($mimeType) {
+
+        return preg_match('/^video\//', $mimeType);
+
     }
 
     public function getAllMedia() {

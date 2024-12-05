@@ -1,4 +1,5 @@
-// src/Annotations.php
+
+<?php
 class Annotations {
     private $db;
 
